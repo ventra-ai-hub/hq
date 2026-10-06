@@ -374,6 +374,28 @@ details.grp .body{padding:2px 6px 10px}
   .rates{grid-template-columns:1fr}
 }
 
+/* client picker */
+.cpick{width:100%;display:flex;align-items:center;gap:12px;padding:7px 14px 7px 7px;border-radius:18px;border:1px solid var(--line);background:var(--glass-hi);text-align:left;font-size:14px;min-height:48px;transition:border-color .15s}
+.cpick:hover,.cpick.open{border-color:color-mix(in srgb,var(--sky) 50%,transparent)}
+.cpick .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cpick .nm small{color:var(--ink3);font-size:12px;margin-left:8px}
+.cpick .ph{flex:1;color:var(--ink3);padding-left:8px}
+.cpick .chev{color:var(--ink3);transform:rotate(90deg);transition:transform .2s;display:flex}
+.cpick.open .chev{transform:rotate(-90deg)}
+.cpList{margin-top:8px;border-radius:20px;background:var(--glass-hi);border:1px solid var(--line);padding:8px;box-shadow:0 18px 40px -26px rgba(0,0,0,.45)}
+.fld label.cpSearch,.cpSearch{display:flex;font-size:inherit;align-items:center;gap:8px;padding:0 12px;height:40px;border-radius:14px;background:var(--chip);color:var(--ink3);margin-bottom:6px}
+.cpSearch input{flex:1;min-width:0;border:none;background:none;outline:none;font-size:13.5px;color:var(--ink)}
+.cpRows{max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.cpRows{scrollbar-width:thin;scrollbar-color:var(--ink3) transparent}
+.cpRows::-webkit-scrollbar{width:6px}.cpRows::-webkit-scrollbar-track{background:transparent}.cpRows::-webkit-scrollbar-thumb{background:var(--ink3);border-radius:6px}
+.cpRow{display:flex;align-items:center;gap:10px;padding:7px 10px 7px 7px;border-radius:14px;text-align:left;font-size:13.5px;width:100%}
+.cpRow:hover,.cpRow.first{background:var(--chip)}
+.cpRow.on{background:color-mix(in srgb,var(--sea) 12%,transparent)}
+.cpRow .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cpRow small{display:block;font-size:11.5px;color:var(--ink3)}
+.cpRow .ck{color:var(--sea);display:flex}
+.cpEmpty{padding:14px;text-align:center;font-size:13px;color:var(--ink3)}
+
 /* date picker */
 .dpRow{display:flex;flex-wrap:wrap;gap:6px}
 .dpRow button{display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:var(--glass-hi);font-size:13px;color:var(--ink2);transition:background .15s}
@@ -1182,6 +1204,23 @@ var renderDock=function(){
   return '<div class="dock glass"><button class="go" data-act="log"'+(cid?' data-id="'+cid+'"':"")+'><span class="ic">'+I.text(16)+'</span>Log a call, text, voicemail…<span class="ar">'+I.right(16)+'</span></button></div>';
 };
 
+/* ════════ client picker (modals) ════════ */
+var cpMatches=function(){var q=((modal&&modal.cpQ)||"").trim().toLowerCase();
+  return data.clients.filter(function(c){return c.status!=="Churned"&&(!q||(c.name+" "+(c.owner||"")+" "+agentOf(c)).toLowerCase().indexOf(q)>=0)}).sort(function(a,b){return a.name.localeCompare(b.name)})};
+var cpRows=function(){
+  var list=cpMatches(),q=(modal.cpQ||"").trim();
+  if(!list.length)return'<div class="cpEmpty">No clients match</div>';
+  return list.map(function(c,i){var on=c.id===modal.clientId;
+    return'<button type="button" class="cpRow'+(on?" on":"")+(q&&i===0?" first":"")+'" data-act="cppick" data-id="'+c.id+'">'+ava(c,true)+'<span class="nm">'+esc(c.name)+'<small>'+esc(isSettled(c)?"Live · settled":stMeta(c.status).l)+'</small></span>'+(on?'<i class="ck">'+I.check(15)+'</i>':"")+'</button>'}).join("");
+};
+var clientPicker=function(){
+  var c=modal.clientId&&byId(modal.clientId),open=!!modal.cpOpen;
+  return'<button type="button" class="cpick'+(open?" open":"")+'" data-act="cpopen">'+
+    (c?ava(c,true)+'<span class="nm">'+esc(c.name)+'<small>'+esc(isSettled(c)?"Live · settled":stMeta(c.status).l)+'</small></span>':'<span class="ph">Choose a client</span>')+
+    '<span class="chev">'+I.chev(15)+'</span></button>'+
+    (open?'<div class="cpList"><label class="cpSearch">'+I.search(15)+'<input id="cpq" placeholder="Search clients" autocomplete="off" value="'+esc(modal.cpQ||"")+'"></label><div class="cpRows" id="cprows">'+cpRows()+'</div></div>':"");
+};
+
 /* ════════ date picker ════════
    ids: "m:<key>" reads/writes modal[key]; "c:<field>" reads/writes the open client's field. */
 var dpState={};
@@ -1221,8 +1260,7 @@ var modal=null;
 var renderModal=function(){
   if(!modal)return"";
   var fr=modal.fresh?" fresh":"";modal.fresh=false;
-  var opts=data.clients.filter(function(c){return c.status!=="Churned"}).sort(function(a,b){return a.name.localeCompare(b.name)});
-  var sel='<select name="client" required>'+opts.map(function(c){return'<option value="'+c.id+'"'+(c.id===modal.clientId?" selected":"")+'>'+esc(c.name)+'</option>'}).join("")+'</select>';
+  var sel=clientPicker();
   var wrap=function(form,title,inner){return'<div class="scrim'+fr+'" data-act="close"><form class="glass solid modal" data-form="'+form+'" role="dialog" aria-label="'+title+'"><h3>'+title+'</h3>'+inner+'</form></div>'};
   var actions=function(lbl){return'<div class="mAct"><button type="button" class="pill" data-act="close">Cancel</button><button class="pill dark">'+lbl+'</button></div>'};
   if(modal.type==="up")return wrap("up","Add a reminder",
@@ -1280,6 +1318,7 @@ var setStatus=function(c,s){
   c.status=s;c.statusSince=today();
   if(s==="Active"){c.tp=0;if(!c.liveAt)c.liveAt=today()}
 };
+var focusCp=function(){var q=document.getElementById("cpq");if(q)q.focus()};
 var copyText=function(txt,msg){
   var done=function(){say(msg);render()};
   var fallback=function(){var ta=document.createElement("textarea");ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand("copy")}catch(e){}ta.remove();done()};
@@ -1315,6 +1354,8 @@ var act={
   syncnow:function(){modal=null;render();doPull(false).then(function(pulled){if(!pulled&&mode==="real")doPush().then(function(){say(syncSt==="ok"?"Synced":"Sync failed. Check the token and gist ID");render()});else{say(pulled?"Pulled your latest data":"Sync failed. Check the token and gist ID");render()}})},
   syncpull:function(){if(!confirm("Replace what's in this browser with the copy in your gist?"))return;modal=null;doPull(true).then(function(ok){say(ok?"Pulled from your gist":"Couldn't pull from the gist");render()})},
   syncoff:function(){ls.set(LSC,JSON.stringify({token:"",gistId:""}));modal=null;setSync("off");say("Sync turned off");render()},
+  cpopen:function(){if(!modal)return;modal.cpOpen=!modal.cpOpen;modal.cpQ="";render();if(modal.cpOpen)focusCp()},
+  cppick:function(id){if(!modal)return;modal.clientId=id;modal.cpOpen=false;modal.cpQ="";render()},
   dpopen:function(id){var st=dpState[id]=dpState[id]||{};st.open=!st.open;if(st.open)st.month=(dpGet(id)||today()).slice(0,7);render()},
   dpmonth:function(v){var p=v.split("|"),st=dpState[p[0]]=dpState[p[0]]||{};st.month=shiftYM(st.month||(dpGet(p[0])||today()).slice(0,7),+p[1]);render()},
   dppick:function(v){var i=v.lastIndexOf("|"),id=v.slice(0,i),d=v.slice(i+1);dpState[id]={open:false};dpSet(id,d||null)},
@@ -1345,6 +1386,7 @@ app.addEventListener("keydown",function(e){
 app.addEventListener("toggle",function(e){var g=e.target.getAttribute&&e.target.getAttribute("data-grp");if(g)openGroups[g]=e.target.open},true);
 app.addEventListener("input",function(e){
   var el=e.target;
+  if(el.id==="cpq"&&modal){modal.cpQ=el.value;var r=document.getElementById("cprows");if(r)r.innerHTML=cpRows();return}
   if(el.id==="csearch"){ui.q=el.value;document.getElementById("cgrid").innerHTML=renderClientGrid();return}
   var uk=el.getAttribute("data-use"),rk=el.getAttribute("data-rate");
   if(uk||rk){
@@ -1370,9 +1412,9 @@ app.addEventListener("submit",function(e){
     var inp=app.querySelector('form[data-form="task"] input');if(inp)inp.focus();return}
   if(k==="team"){var c0=byId(route.id),nm=f.name.value.trim();if(!c0||!nm)return;
     commit(function(){c0.team.push({name:nm,role:f.role.value.trim(),notes:f.notes.value.trim()})});var ti=app.querySelector('form[data-form="team"] input');if(ti)ti.focus();return}
-  if(k==="log"){var cid=f.client.value,c=byId(cid),kind=modal.kind,date=modal.date||today(),note=f.note.value.trim();modal=null;
+  if(k==="log"){var cid=modal.clientId,c=byId(cid);if(!c){modal.cpOpen=true;say("Choose a client first");render();focusCp();return}var kind=modal.kind,date=modal.date||today(),note=f.note.value.trim();modal=null;
     commit(function(d){logContact(d,cid,date,kind,note);if(c&&PIPE.indexOf(c.status)>=0&&(!c.lastNudge||date>c.lastNudge))c.lastNudge=date},kindOf(kind).l+" logged for "+(c?c.name:"client"),true);return}
-  if(k==="up"){var c2=byId(f.client.value),txt=f.text.value.trim(),dt=modal.date||today();if(!txt||!c2)return;modal=null;
+  if(k==="up"){var c2=byId(modal.clientId),txt=f.text.value.trim(),dt=modal.date||today();if(!c2){modal.cpOpen=true;say("Choose a client first");render();focusCp();return}if(!txt)return;modal=null;
     commit(function(){c2.upcoming.push({id:uid(),date:dt,text:txt,done:false})},"Reminder added",true);return}
   if(k==="sync"){ls.set(LSC,JSON.stringify({token:f.token.value.trim(),gistId:f.gistId.value.trim()}));modal=null;render();
     doPull(false).then(function(pulled){say(pulled?"Synced. Pulled your latest data":syncSt==="err"?"Couldn't reach the gist. Check the token and ID":"Sync is on");if(!pulled&&mode==="real")doPush();render()});return}
@@ -1381,7 +1423,10 @@ app.addEventListener("submit",function(e){
       phone:"",email:"",keyDetails:"",team:[],upcoming:[],intake:{agentName:f.agent.value.trim()}};setStatus(nc,m.status||"Onboarding");d.clients.push(nc)},name+" added",true);
     go("#/clients/"+id)}
 });
-document.addEventListener("keydown",function(e){if(e.key==="Escape"&&modal){modal=null;render()}});
+document.addEventListener("keydown",function(e){
+  if(e.target&&e.target.id==="cpq"&&e.key==="Enter"){e.preventDefault();var m=cpMatches();if(m.length)act.cppick(m[0].id);return}
+  if(e.key==="Escape"&&modal){if(modal.cpOpen){modal.cpOpen=false;render();return}modal=null;render()}
+});
 
 document.getElementById("importFile").addEventListener("change",function(e){
   var file=e.target.files&&e.target.files[0];if(!file)return;
