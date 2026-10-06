@@ -4,8 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Client Success</title>
-<meta name="theme-color" content="#dfe7eb">
+<meta name="theme-color" id="themeColor" content="#111213">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Client Success">
 <link rel="apple-touch-icon" href="./icon-180.png?v=2">
 <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png?v=2">
@@ -179,9 +180,6 @@ h1 em{font-style:normal;font-weight:400}
 .cyc .meta b{font-weight:500;color:var(--ink)}
 .bar{height:6px;border-radius:6px;background:var(--chip);overflow:hidden;margin-bottom:12px}
 .bar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--b1),var(--lime))}
-.cycPick{display:flex;gap:3px;padding:3px;border-radius:999px;background:var(--chip)}
-.cycPick button{padding:6px 12px;border-radius:999px;font-size:12px;color:var(--ink2);white-space:nowrap}
-.cycPick button.on{background:var(--glass-solid);color:var(--ink);box-shadow:0 4px 12px -6px rgba(0,0,0,.2)}
 .how{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--k,var(--good))}
 
 /* boards */
@@ -729,7 +727,9 @@ var isLive=function(c){return c.status==="Active"};
 var inFlow=function(c){return isLive(c)&&(c.tp||0)<TPS.length};
 var isSettled=function(c){return isLive(c)&&(c.tp||0)>=TPS.length};
 var agentOf=function(c){return(c.intake&&c.intake.agentName)||""};
-var cycleStart=function(){var A=data.cycle.anchor,t=today();var k=Math.floor(daysBetween(A,t)/14);return addDays(A,k*14)};
+// Dan touches base every second Monday; 28 Sep 2026 was a touch day, so 12 Oct, 26 Oct… follow.
+var CYCLE_ANCHOR="2026-09-28";
+var cycleStart=function(){var A=CYCLE_ANCHOR,t=today();var k=Math.floor(daysBetween(A,t)/14);return addDays(A,k*14)};
 var contactsOf=function(c){return data.contacts.filter(function(x){return x.clientId===c.id}).sort(function(a,b){return b.date.localeCompare(a.date)||(b.at||0)-(a.at||0)})};
 var cycleTouch=function(c){var s=cycleStart(),t=today();return contactsOf(c).find(function(x){return x.date>=s&&x.date<=t})||null};
 var lastContact=function(c){return contactsOf(c)[0]||null};
@@ -863,8 +863,6 @@ var renderComing=function(){
     '<button class="pill" data-act="addup">'+I.plus(14)+'Reminder</button></div>'+
     '<div class="rows">'+(rows||'<div class="empty">All quiet. Nothing due across the pipelines.</div>')+'</div></div>';
 };
-// the two possible fortnight alignments, as each one's most recent start Monday
-var cycleOpts=function(){var cs=cycleStart(),t=today(),alt=addDays(cs,7)<=t?addDays(cs,7):addDays(cs,-7);return[cs,alt].sort()};
 var renderCycle=function(){
   var t=today(),cs=cycleStart(),next=addDays(cs,14);
   var settled=data.clients.filter(isSettled).sort(function(a,b){return(cycleTouch(a)?1:0)-(cycleTouch(b)?1:0)||a.name.localeCompare(b.name)});
@@ -877,8 +875,8 @@ var renderCycle=function(){
     return '<div class="row"><span data-act="open" data-id="'+c.id+'">'+ava(c,true)+'</span><div class="main" data-act="open" data-id="'+c.id+'"><div class="t">'+esc(c.name)+'</div><div class="s">'+
       (h?esc(h.note||"No note"):lc?"Last: "+esc(kindOf(lc.kind).l.toLowerCase())+" "+esc(relDay(lc.date)):"No contact logged yet")+'</div></div>'+right+'</div>';
   }).join("");
-  return '<div class="glass card s5 in" id="cycle" style="--i:10"><div class="cardH"><div><h2>Fortnightly touch</h2><p class="hs">Every second Monday · this fortnight began Mon '+esc(fmtS(cs))+'</p></div><span class="sp"></span>'+
-    '<div class="cycPick" role="group" aria-label="Which set of every-second Mondays you touch base on">'+cycleOpts().map(function(o){return'<button class="'+(o===cs?"on":"")+'" data-act="setcycle" data-id="'+o+'" title="Touch days every second Monday: '+esc(fmtS(o))+', '+esc(fmtS(addDays(o,14)))+', '+esc(fmtS(addDays(o,28)))+'…">'+esc(fmtS(o))+' · '+esc(fmtS(addDays(o,14)))+' · '+esc(fmtS(addDays(o,28)))+'</button>'}).join("")+'</div></div>'+
+  return '<div class="glass card s5 in" id="cycle" style="--i:10"><div class="cardH"><div><h2>Fortnightly touch</h2><p class="hs">Every second Monday · '+(cs===t?"touch day is today":"last touch day Mon "+esc(fmtS(cs)))+'</p></div>'+
+    '</div>'+
     '<div class="cyc"><div class="big">'+dots(done+"/"+n,6,done+" of "+n+" touched")+'</div>'+
     '<div class="meta"><b>'+done+' of '+n+'</b> touched this fortnight<br>Next touch day <b>Mon '+esc(fmtS(next))+'</b> · '+daysBetween(t,next)+'d</div></div>'+
     '<div class="bar"><i style="width:'+(n?Math.round(done/n*100):0)+'%"></i></div>'+
@@ -1320,8 +1318,6 @@ var act={
   dpopen:function(id){var st=dpState[id]=dpState[id]||{};st.open=!st.open;if(st.open)st.month=(dpGet(id)||today()).slice(0,7);render()},
   dpmonth:function(v){var p=v.split("|"),st=dpState[p[0]]=dpState[p[0]]||{};st.month=shiftYM(st.month||(dpGet(p[0])||today()).slice(0,7),+p[1]);render()},
   dppick:function(v){var i=v.lastIndexOf("|"),id=v.slice(0,i),d=v.slice(i+1);dpState[id]={open:false};dpSet(id,d||null)},
-  setcycle:function(iso){if(iso===cycleStart())return;commit(function(d){d.cycle.anchor=iso},"Touch days now "+fmtS(iso)+", "+fmtS(addDays(iso,14))+", "+fmtS(addDays(iso,28))+"…",true)},
-  shift:function(){commit(function(d){d.cycle.anchor=addDays(d.cycle.anchor,7)},"Cycle moved by a week",true)},
   log:function(id){dpState={};modal={type:"log",clientId:id||null,kind:"text",date:today(),fresh:true};render();var f=app.querySelector(".modal textarea");if(f&&id)f.focus()},
   addup:function(id){dpState={};modal={type:"up",clientId:id||null,date:today(),fresh:true};render();var f=app.querySelector('.modal [name="text"]');if(f)f.focus()},
   newclient:function(){modal={type:"client",status:"Onboarding",tz:"qld",hue:null,fresh:true};render();var f=app.querySelector('.modal [name="name"]');if(f)f.focus()},
@@ -1333,7 +1329,7 @@ var act={
   nav:function(h){go(h)},
   flt:function(id){ui.flt=id;render()},
   theme:function(){var r=document.documentElement,cur=r.getAttribute("data-theme"),dark=cur?cur==="dark":matchMedia("(prefers-color-scheme: dark)").matches;
-    var nx=dark?"light":"dark";r.setAttribute("data-theme",nx);ls.set("hq3_theme",nx)},
+    var nx=dark?"light":"dark";r.setAttribute("data-theme",nx);ls.set("hq3_theme",nx);syncChrome()},
   "import":function(){document.getElementById("importFile").click()}
 };
 
@@ -1402,7 +1398,11 @@ document.getElementById("importFile").addEventListener("change",function(e){
 });
 
 /* ════════ boot ════════ */
+var isDark=function(){var t=document.documentElement.getAttribute("data-theme");return t?t==="dark":matchMedia("(prefers-color-scheme: dark)").matches};
+var syncChrome=function(){var m=document.getElementById("themeColor");if(m)m.setAttribute("content",isDark()?"#111213":"#dfe7eb")};
 var th=ls.get("hq3_theme");if(th)document.documentElement.setAttribute("data-theme",th);
+syncChrome();
+try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",syncChrome)}catch(e){}
 load();parseRoute();render();intro();
 doPull(false);
 document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible"&&Date.now()-lastPull>60000)doPull(false)});
