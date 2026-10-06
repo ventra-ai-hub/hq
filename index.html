@@ -7,9 +7,9 @@
 <meta name="theme-color" content="#dfe7eb">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Client Success">
-<link rel="apple-touch-icon" href="./icon-180.png">
-<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
-<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-180.png?v=2">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png?v=2">
+<link rel="manifest" href="./manifest.webmanifest?v=2">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -1171,10 +1171,11 @@ var renderModal=function(){
     '<div class="fld"><label>Client</label>'+sel+'</div><div class="fld"><label>What</label><input name="text" required placeholder="e.g. Send new holiday hours"></div>'+
     '<div class="fld"><label>When</label><input type="date" name="date" value="'+today()+'" required></div>'+actions("Add"));
   if(modal.type==="sync"){var cfg=loadCfg();return wrap("sync","Sync",
-    '<p style="font-size:13px;color:var(--ink2);line-height:1.5;margin:-6px 0 14px">Keeps your Mac and phone in step through the same secret gist as the old app. The token stays in this browser only.</p>'+
+    '<p style="font-size:13px;color:var(--ink2);line-height:1.5;margin:-6px 0 14px">Keeps your Mac and phone in step through the same secret gist as the old app. Each browser needs this set up once. The token stays in this browser only.</p>'+
+    '<p style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:14px"><span class="st" style="--c:'+({ok:"var(--good)",pending:"var(--warn)",err:"var(--coral)",off:"var(--stone)"}[syncSt])+'">'+esc({ok:"Synced",pending:"Syncing",err:"Sync failed",off:"Sync off"}[syncSt])+'</span>'+(syncSt==="ok"&&lastSync?'<span style="color:var(--ink3)">at '+esc(lastSync)+'</span>':"")+(mode==="demo"?'<span style="color:var(--ink3)">Showing sample clients</span>':"")+'</p>'+
     '<div class="fld"><label>GitHub token (gist scope)</label><input name="token" type="password" autocomplete="off" placeholder="github_pat_…" value="'+esc(cfg.token)+'"></div>'+
     '<div class="fld"><label>Gist ID</label><input name="gistId" autocomplete="off" placeholder="The ID from the old app\'s sync screen" value="'+esc(cfg.gistId)+'"></div>'+
-    (hasSync()?'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><button type="button" class="pill" data-act="syncpull">Pull from gist now</button><button type="button" class="pill danger" data-act="syncoff">Turn sync off</button></div>':"")+
+    (hasSync()?'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><button type="button" class="pill good" data-act="syncnow">'+I.sync(13)+'Sync now</button><button type="button" class="pill" data-act="syncpull">Pull from gist now</button><button type="button" class="pill danger" data-act="syncoff">Turn sync off</button></div>':"")+
     actions("Save"))}
   if(modal.type==="client")return wrap("client","New client",
     '<div class="fields"><div class="fld"><label>Business name</label><input name="name" required placeholder="e.g. Perci Salon"></div><div class="fld"><label>Owner</label><input name="owner" placeholder="e.g. David"></div></div>'+
@@ -1252,7 +1253,8 @@ var act={
     (usageOf(ym,cid)||{}).billed?"Marked "+(c?c.name:"")+" not invoiced":(c?c.name:"")+" invoiced",true)},
   resetrates:function(){commit(function(d){if(d.billing.months[ui.ym])d.billing.months[ui.ym].rates=clone(d.billing.rates)},"Using current defaults")},
   copybill:function(cid){var c=byId(cid);if(!c)return;copyText(breakdown(ui.ym,c),"Breakdown copied for "+c.name)},
-  sync:function(){if(hasSync()&&syncSt!=="err"){doPull(false).then(function(pulled){if(!pulled&&mode==="real")doPush()});return}modal={type:"sync",fresh:true};render()},
+  sync:function(){modal={type:"sync",fresh:true};render()},
+  syncnow:function(){modal=null;render();doPull(false).then(function(pulled){if(!pulled&&mode==="real")doPush().then(function(){say(syncSt==="ok"?"Synced":"Sync failed. Check the token and gist ID");render()});else{say(pulled?"Pulled your latest data":"Sync failed. Check the token and gist ID");render()}})},
   syncpull:function(){if(!confirm("Replace what's in this browser with the copy in your gist?"))return;modal=null;doPull(true).then(function(ok){say(ok?"Pulled from your gist":"Couldn't pull from the gist");render()})},
   syncoff:function(){ls.set(LSC,JSON.stringify({token:"",gistId:""}));modal=null;setSync("off");say("Sync turned off");render()},
   shift:function(){commit(function(d){d.cycle.anchor=addDays(d.cycle.anchor,7)},"Cycle moved by a week",true)},
