@@ -38,19 +38,19 @@
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0d171c; --ink:#eaf2f5; --ink2:rgba(234,242,245,.68); --ink3:rgba(234,242,245,.42);
-    --line:rgba(255,255,255,.08); --glass:rgba(22,36,44,.5); --glass-hi:rgba(30,48,58,.72); --glass-solid:rgba(20,32,40,.92);
+    --bg:#111213; --ink:#eaf2f5; --ink2:rgba(234,242,245,.68); --ink3:rgba(234,242,245,.42);
+    --line:rgba(255,255,255,.08); --glass:rgba(40,41,44,.5); --glass-hi:rgba(52,53,57,.72); --glass-solid:rgba(30,31,33,.94);
     --edge:rgba(255,255,255,.12); --shadow:0 24px 60px -24px rgba(0,0,0,.6); --chip:rgba(255,255,255,.07);
-    --b1:#145f78; --b2:#1d7f9c; --b3:#a5561c; --b4:#6b4330; --b5:#16303b; --grid:rgba(255,255,255,.04);
+    --b1:#3e4146; --b2:#55585e; --b3:#9a5420; --b4:#5e4232; --b5:#1d1e21; --grid:rgba(255,255,255,.04);
     --good:#5fd3a8; --warn:#f0b04a;
     --honey:#f0c157; --sky:#7cc0f2; --peri:#a9a2f5; --sea:#5fd3a8; --apricot:#f6a26b; --stone:#a7b3b9; --blush:#f08aa7;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0d171c; --ink:#eaf2f5; --ink2:rgba(234,242,245,.68); --ink3:rgba(234,242,245,.42);
-  --line:rgba(255,255,255,.08); --glass:rgba(22,36,44,.5); --glass-hi:rgba(30,48,58,.72); --glass-solid:rgba(20,32,40,.92);
+  --bg:#111213; --ink:#eaf2f5; --ink2:rgba(234,242,245,.68); --ink3:rgba(234,242,245,.42);
+  --line:rgba(255,255,255,.08); --glass:rgba(40,41,44,.5); --glass-hi:rgba(52,53,57,.72); --glass-solid:rgba(30,31,33,.94);
   --edge:rgba(255,255,255,.12); --shadow:0 24px 60px -24px rgba(0,0,0,.6); --chip:rgba(255,255,255,.07);
-  --b1:#145f78; --b2:#1d7f9c; --b3:#a5561c; --b4:#6b4330; --b5:#16303b; --grid:rgba(255,255,255,.04);
+  --b1:#3e4146; --b2:#55585e; --b3:#9a5420; --b4:#5e4232; --b5:#1d1e21; --grid:rgba(255,255,255,.04);
   --good:#5fd3a8; --warn:#f0b04a;
   --honey:#f0c157; --sky:#7cc0f2; --peri:#a9a2f5; --sea:#5fd3a8; --apricot:#f6a26b; --stone:#a7b3b9; --blush:#f08aa7;
 }
@@ -798,7 +798,7 @@ var renderHero=function(){
   return '<section class="hero">'+
     '<div class="in" style="--i:1"><p class="eyebrow">'+esc(fmtLong(t))+(doneToday?" · "+doneToday+" done today":"")+'</p>'+
       '<h1>'+greet()+', <em>Dan</em>.</h1><p class="heroSub">'+heroLine()+'</p></div>'+
-    '<div class="glass strip in" style="--i:2"><div class="stripH"><p>Fortnight from '+esc(fmtS(cs))+'</p><span>next Monday '+esc(fmtS(next))+' · '+toNext+'d</span></div>'+
+    '<div class="glass strip in" style="--i:2"><div class="stripH"><p>Fortnight from '+esc(fmtS(cs))+'</p><span>next touch day Mon '+esc(fmtS(next))+' · '+toNext+'d</span></div>'+
       '<div class="days">'+days+'</div><div class="ruler">'+ticks+'<span class="mk" style="left:'+pos.toFixed(2)+'%"></span></div></div>'+
   '</section>';
 };
@@ -877,10 +877,10 @@ var renderCycle=function(){
     return '<div class="row"><span data-act="open" data-id="'+c.id+'">'+ava(c,true)+'</span><div class="main" data-act="open" data-id="'+c.id+'"><div class="t">'+esc(c.name)+'</div><div class="s">'+
       (h?esc(h.note||"No note"):lc?"Last: "+esc(kindOf(lc.kind).l.toLowerCase())+" "+esc(relDay(lc.date)):"No contact logged yet")+'</div></div>'+right+'</div>';
   }).join("");
-  return '<div class="glass card s5 in" id="cycle" style="--i:10"><div class="cardH"><div><h2>Fortnightly Monday</h2><p class="hs">This cycle began Mon '+esc(fmtS(cs))+'</p></div><span class="sp"></span>'+
-    '<div class="cycPick" role="group" aria-label="Which Mondays your fortnight runs on">'+cycleOpts().map(function(o){return'<button class="'+(o===cs?"on":"")+'" data-act="setcycle" data-id="'+o+'" title="Fortnights start '+esc(fmtS(o))+', '+esc(fmtS(addDays(o,14)))+', '+esc(fmtS(addDays(o,28)))+'…">From '+esc(fmtS(o))+'</button>'}).join("")+'</div></div>'+
+  return '<div class="glass card s5 in" id="cycle" style="--i:10"><div class="cardH"><div><h2>Fortnightly touch</h2><p class="hs">Every second Monday · this fortnight began Mon '+esc(fmtS(cs))+'</p></div><span class="sp"></span>'+
+    '<div class="cycPick" role="group" aria-label="Which set of every-second Mondays you touch base on">'+cycleOpts().map(function(o){return'<button class="'+(o===cs?"on":"")+'" data-act="setcycle" data-id="'+o+'" title="Touch days every second Monday: '+esc(fmtS(o))+', '+esc(fmtS(addDays(o,14)))+', '+esc(fmtS(addDays(o,28)))+'…">'+esc(fmtS(o))+' · '+esc(fmtS(addDays(o,14)))+' · '+esc(fmtS(addDays(o,28)))+'</button>'}).join("")+'</div></div>'+
     '<div class="cyc"><div class="big">'+dots(done+"/"+n,6,done+" of "+n+" touched")+'</div>'+
-    '<div class="meta"><b>'+done+' of '+n+'</b> touched<br>Next Monday <b>'+esc(fmtS(next))+'</b> · '+daysBetween(t,next)+'d</div></div>'+
+    '<div class="meta"><b>'+done+' of '+n+'</b> touched this fortnight<br>Next touch day <b>Mon '+esc(fmtS(next))+'</b> · '+daysBetween(t,next)+'d</div></div>'+
     '<div class="bar"><i style="width:'+(n?Math.round(done/n*100):0)+'%"></i></div>'+
     '<div class="rows">'+(rows||'<div class="empty">No one has finished their first 20 days yet.</div>')+'</div></div>';
 };
@@ -1320,7 +1320,7 @@ var act={
   dpopen:function(id){var st=dpState[id]=dpState[id]||{};st.open=!st.open;if(st.open)st.month=(dpGet(id)||today()).slice(0,7);render()},
   dpmonth:function(v){var p=v.split("|"),st=dpState[p[0]]=dpState[p[0]]||{};st.month=shiftYM(st.month||(dpGet(p[0])||today()).slice(0,7),+p[1]);render()},
   dppick:function(v){var i=v.lastIndexOf("|"),id=v.slice(0,i),d=v.slice(i+1);dpState[id]={open:false};dpSet(id,d||null)},
-  setcycle:function(iso){if(iso===cycleStart())return;commit(function(d){d.cycle.anchor=iso},"Fortnights now start "+fmtS(iso)+", "+fmtS(addDays(iso,14))+"…",true)},
+  setcycle:function(iso){if(iso===cycleStart())return;commit(function(d){d.cycle.anchor=iso},"Touch days now "+fmtS(iso)+", "+fmtS(addDays(iso,14))+", "+fmtS(addDays(iso,28))+"…",true)},
   shift:function(){commit(function(d){d.cycle.anchor=addDays(d.cycle.anchor,7)},"Cycle moved by a week",true)},
   log:function(id){dpState={};modal={type:"log",clientId:id||null,kind:"text",date:today(),fresh:true};render();var f=app.querySelector(".modal textarea");if(f&&id)f.focus()},
   addup:function(id){dpState={};modal={type:"up",clientId:id||null,date:today(),fresh:true};render();var f=app.querySelector('.modal [name="text"]');if(f)f.focus()},
