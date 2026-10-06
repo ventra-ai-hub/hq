@@ -140,7 +140,7 @@ h1 em{font-style:normal;font-weight:400}
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
 .s7{grid-column:span 7}.s5{grid-column:span 5}.s12{grid-column:span 12}
 .card{padding:22px 22px 18px;display:flex;flex-direction:column;min-width:0}
-.cardH{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
+.cardH{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;flex-wrap:wrap}
 .cardH h2{font-size:17px;font-weight:500;letter-spacing:-.005em}
 .cardH .hs{font-size:12px;color:var(--ink3);margin-top:3px}
 .cardH .sp{flex:1}
@@ -179,6 +179,9 @@ h1 em{font-style:normal;font-weight:400}
 .cyc .meta b{font-weight:500;color:var(--ink)}
 .bar{height:6px;border-radius:6px;background:var(--chip);overflow:hidden;margin-bottom:12px}
 .bar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--b1),var(--lime))}
+.cycPick{display:flex;gap:3px;padding:3px;border-radius:999px;background:var(--chip)}
+.cycPick button{padding:6px 12px;border-radius:999px;font-size:12px;color:var(--ink2);white-space:nowrap}
+.cycPick button.on{background:var(--glass-solid);color:var(--ink);box-shadow:0 4px 12px -6px rgba(0,0,0,.2)}
 .how{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--k,var(--good))}
 
 /* boards */
@@ -860,6 +863,8 @@ var renderComing=function(){
     '<button class="pill" data-act="addup">'+I.plus(14)+'Reminder</button></div>'+
     '<div class="rows">'+(rows||'<div class="empty">All quiet. Nothing due across the pipelines.</div>')+'</div></div>';
 };
+// the two possible fortnight alignments, as each one's most recent start Monday
+var cycleOpts=function(){var cs=cycleStart(),t=today(),alt=addDays(cs,7)<=t?addDays(cs,7):addDays(cs,-7);return[cs,alt].sort()};
 var renderCycle=function(){
   var t=today(),cs=cycleStart(),next=addDays(cs,14);
   var settled=data.clients.filter(isSettled).sort(function(a,b){return(cycleTouch(a)?1:0)-(cycleTouch(b)?1:0)||a.name.localeCompare(b.name)});
@@ -873,7 +878,7 @@ var renderCycle=function(){
       (h?esc(h.note||"No note"):lc?"Last: "+esc(kindOf(lc.kind).l.toLowerCase())+" "+esc(relDay(lc.date)):"No contact logged yet")+'</div></div>'+right+'</div>';
   }).join("");
   return '<div class="glass card s5 in" id="cycle" style="--i:10"><div class="cardH"><div><h2>Fortnightly Monday</h2><p class="hs">This cycle began Mon '+esc(fmtS(cs))+'</p></div><span class="sp"></span>'+
-    '<button class="pill" data-act="shift" title="Move the cycle by one week">Shift a week</button></div>'+
+    '<div class="cycPick" role="group" aria-label="Which Mondays your fortnight runs on">'+cycleOpts().map(function(o){return'<button class="'+(o===cs?"on":"")+'" data-act="setcycle" data-id="'+o+'" title="Fortnights start '+esc(fmtS(o))+', '+esc(fmtS(addDays(o,14)))+', '+esc(fmtS(addDays(o,28)))+'…">From '+esc(fmtS(o))+'</button>'}).join("")+'</div></div>'+
     '<div class="cyc"><div class="big">'+dots(done+"/"+n,6,done+" of "+n+" touched")+'</div>'+
     '<div class="meta"><b>'+done+' of '+n+'</b> touched<br>Next Monday <b>'+esc(fmtS(next))+'</b> · '+daysBetween(t,next)+'d</div></div>'+
     '<div class="bar"><i style="width:'+(n?Math.round(done/n*100):0)+'%"></i></div>'+
@@ -1315,6 +1320,7 @@ var act={
   dpopen:function(id){var st=dpState[id]=dpState[id]||{};st.open=!st.open;if(st.open)st.month=(dpGet(id)||today()).slice(0,7);render()},
   dpmonth:function(v){var p=v.split("|"),st=dpState[p[0]]=dpState[p[0]]||{};st.month=shiftYM(st.month||(dpGet(p[0])||today()).slice(0,7),+p[1]);render()},
   dppick:function(v){var i=v.lastIndexOf("|"),id=v.slice(0,i),d=v.slice(i+1);dpState[id]={open:false};dpSet(id,d||null)},
+  setcycle:function(iso){if(iso===cycleStart())return;commit(function(d){d.cycle.anchor=iso},"Fortnights now start "+fmtS(iso)+", "+fmtS(addDays(iso,14))+"…",true)},
   shift:function(){commit(function(d){d.cycle.anchor=addDays(d.cycle.anchor,7)},"Cycle moved by a week",true)},
   log:function(id){dpState={};modal={type:"log",clientId:id||null,kind:"text",date:today(),fresh:true};render();var f=app.querySelector(".modal textarea");if(f&&id)f.focus()},
   addup:function(id){dpState={};modal={type:"up",clientId:id||null,date:today(),fresh:true};render();var f=app.querySelector('.modal [name="text"]');if(f)f.focus()},
